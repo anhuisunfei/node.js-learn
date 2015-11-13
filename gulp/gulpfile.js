@@ -12,7 +12,6 @@ var gulp = require('gulp'),
 	cache = require('gulp-cache'),
 	nodemon = require('gulp-nodemon'),
 	refresh = require('gulp-livereload'),
-	livereload = require('connect-livereload'),
 	_config = {
 		cssPath: 'app/public/css/common.css',
 		cssDist: 'build/public/css',
@@ -22,16 +21,12 @@ var gulp = require('gulp'),
 		imageDist: 'build/public/assets/images'
 	}
 
-var expressServer = require('./app.js');
-gulp.task('serve_', function() {
-	console.log('Server');
-	expressServer.startServer();
-});
 
-gulp.task('serve', function() {
+
+gulp.task('nodemon', function() {
 	nodemon({
 			script: 'app.js',
-			ext: 'json js',
+			ext: 'js',
 			ignore: ['app/public/*']
 		})
 		.on('change', ['lint'])
@@ -97,20 +92,28 @@ gulp.task('clean', function() {
 });
 
 
+gulp.task('livereload',function() {
+	return gulp.src('app/views/auction/item.ejs')
+		.pipe(refresh())
+		.pipe(notify({
+			message: 'livereload task complete'
+		}));
+});
+
 // 预设任务
-gulp.task('default', ['clean'], function() {
-	gulp.start('watch')
+gulp.task('default', ['clean', 'nodemon', 'watch'], function() {
+
 	// gulp.start('styles', 'scripts', 'images','watch');
 });
 
 
-gulp.task('watch',['serve','lint'], function() {
+gulp.task('watch', ['lint'], function() {
 	refresh.listen();
 	gulp.watch(_config.cssPath, ['styles']);
 	gulp.watch(_config.jsPath, ['scripts']);
 	gulp.watch(_config.imagePath, ['images']);
-	 
-	gulp.watch(['app/**/*.js',"!app/public/*.js"]).on('change', function(file) {
+
+	gulp.watch(['app/**/*.js', "!app/public/*.js"]).on('change', function(file) {
 		console.log(file);
 		refresh.changed(file.path);
 	});
